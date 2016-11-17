@@ -2,30 +2,31 @@
 import random
 
 def max_pairwise_product():
-#def max_pairwise_product(a)
+#def max_pairwise_product(a):
     n = int(input())
     a = [int(x) for x in input().split()]
     assert(len(a) == n)
 
-    maxInt = int()
-    max2ndInt = int()
+    maxInt = None
+    max2ndInt = None
 
     for i in range(0, n):
- #   for i in range(0, len(a)):
+#    for i in range(0, len(a)):
         
-        if maxInt == 0:
+        if maxInt == None:
             maxInt = a[i]
 
-        elif max2ndInt == 0:
-            max2ndInt = a[i]
- 
-        elif (a[i] <= maxInt and a[i] > max2ndInt):
-            max2ndInt = a[i]
-
-        elif a[i] > maxInt and maxInt <= max2ndInt:
+        elif max2ndInt == None and a[i] > maxInt:
+            max2ndInt = maxInt
             maxInt = a[i]
+
+        elif max2ndInt == None and a[i] <= maxInt:
+            max2ndInt = a[i]
  
-        elif a[i] > maxInt and maxInt > max2ndInt:
+        elif a[i] <= maxInt and a[i] > max2ndInt:
+            max2ndInt = a[i]
+ 
+        elif a[i] > maxInt:
             max2ndInt = maxInt
             maxInt = a[i]
  
@@ -60,7 +61,7 @@ max_pairwise_product()
 ##tester = True
 ##
 ##while(tester):
-##    randomArray = randomArrayBuilder(10000, 10000, 0)
+##    randomArray = randomArrayBuilder(100, 10, 0)
 ##    maxPairwiseList = max_pairwise_product(randomArray)
 ##    maxPairwiseProduct = maxPairwiseList[0] * maxPairwiseList[1]
 ##    tester = pairwiseMaxTester(maxPairwiseProduct, randomArray)
