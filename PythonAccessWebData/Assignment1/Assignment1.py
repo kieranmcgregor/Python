@@ -3,7 +3,7 @@
 
 import re
 
-numbersList = []
+runningSum = 0
 
 fileName = raw_input("What file would you like to open? ")
 
@@ -16,10 +16,12 @@ except:
 
 for file in fileHandle:
     file = file.strip()
-    numberString = re.findall('([0-9]+)', file)
+    numberString = re.findall('[0-9]+', file)
 
-    if len(numberString) != 1: continue
-    number = float(numberString[0])
-    numbersList.append(number)
+    if len(numberString) <= 0: continue
+    
+    for number in numberString:
+        number = int(number)
+        runningSum += number
         
-print numbersList
+print runningSum
