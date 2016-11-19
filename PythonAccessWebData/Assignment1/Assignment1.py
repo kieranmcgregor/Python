@@ -11,7 +11,7 @@ try:
     fileHandle = open(fileName)
 
 except:
-    print "file not found, opening sample file regex_sum_42.txt"
+    print("file not found, opening sample file regex_sum_42.txt")
     fileHandle = open("regex_sum_42.txt")
 
 for file in fileHandle:
@@ -19,9 +19,9 @@ for file in fileHandle:
     numberString = re.findall('[0-9]+', file)
 
     if len(numberString) <= 0: continue
-    
+
     for number in numberString:
         number = int(number)
         runningSum += number
-        
+
 print runningSum
