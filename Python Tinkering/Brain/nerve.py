@@ -1,20 +1,26 @@
 import random
 
 class Nerve:
-    def __init__(self):
-        self.signal = 1
+    def __init__(self, name):
+        self.name = name
+        self.score = 0
         self.output = self.__set_output()
 
     def propagate(self):
-        print ("Signal: {}".format(self.signal))
-        feedback = input("Reward or punish? (+ / -) ")
-        print ("Feedback: {}".format(feedback))
+        print ("{} Output: {}".format(self.name, self.output))
+
+    def adjust_score(self, feedback):
+        if feedback == "+":
+            self.score = 0
+        elif feedback == "-":
+            self.score += 1
+        print ("{} score: {}".format(self.name, self.score))
 
     def get_output(self):
         return self.output
 
-    def get_signal(self):
-        return self.signal
+    def get_score(self):
+        return self.score
 
     def __set_output(self):
         canvas_width = 128

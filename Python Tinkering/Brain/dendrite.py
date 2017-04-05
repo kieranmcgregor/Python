@@ -1,27 +1,42 @@
 import random
 
 class Dendrite:
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
         self.probability = 0.5
         self.signal = 0
-        self.connections = []
+        self.score = 0
+        self.neurons = []
 
     def propagate(self):
         self.__set_signal()
-        print ("Signal: {}".format(self.signal))
+        signal = self.signal
+        print ("{} Signal: {}".format(self.name, signal))
+        for neuron in self.neurons:
+            neuron.manage_inputs(signal)
 
-        feedback = input("Reward or punish? (+ / -) ")
+    def add_connection(self, Neuron):
+        self.neurons.append(Neuron)
+
+    def adjust_score(self, feedback):
+        if feedback == "+":
+            self.score = 0
+        elif feedback == "-":
+            self.score += 1
+
+        print ("{} score: {}".format(self.name, self.score))
+
         self.__set_probability(feedback)
         print ("Probability: {}".format(self.probability))
 
     def get_probability(self):
         return self.probability
 
-    def add_connection(self, connection):
-        pass
-
     def get_signal(self):
         return self.signal
+
+    def get_score(self):
+        return self.score
 
     def __set_probability(self, feedback):
         signal = self.signal
