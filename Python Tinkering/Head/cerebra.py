@@ -1,7 +1,7 @@
 import random
-from neuron import Neuron
+from nd_meld import Neuron
 
-class Brain:
+class Cerebra:
     def __init__(self, name):
         self.name = name
         self.neurons = self.__primordial_brain()
@@ -21,34 +21,40 @@ class Brain:
 
     def activate(self):
         activated_neurons = []
+        activate = 1
+        rest = 0
+
         for neuron in self.neurons:
-            firing_probability = neuron.get_firing_probability()
-            signal = (1) if random.random() > firing_probability else (0)
-            if signal == 1:
-                neuron.propagate()
+            activation_probability = neuron.get_activation_probability()
+            signal = ((activate) if random.random() <
+                        activation_probability else (rest))
+            if signal == activate:
+                neuron.activate()
                 activated_neurons.append(neuron)
 
+        self.__feedback_input(activated_neurons)
+
+    def __feedback_input(self, activated_neurons):
         feedback = input("Reward or punish? (+ / -) ")
         for neuron in self.neurons:
             if neuron in activated_neurons:
-                neuron.adjust_score(feedback, 'active')
+                neuron.adjust_probability(feedback, 'active')
             else:
-                neuron.adjust_score(feedback, 'inactive')
+                neuron.adjust_probability(feedback, 'inactive')
+
+        for neuron1 in activated_neurons:
+            for neuron2 in activated_neurons:
+                if neuron1 != neuron2:
+                    predendrite_absent = neuron1.check_connections(neuron2, feedback)
+                    if (predendrite_absent) and (feedback == '+'):
+                        neuron1.add_predendrite(neuron2)
 
     def clean(self):
-        for neuron in self.neurons:
-            neuron.clean()
-            if len(neuron.dendrites) == 0:
-                self.kill_neuron(neuron.name)
-
-    def kill_neuron(self, name):
         temp_neurons = []
         for neuron in self.neurons:
-            if neuron.get_name() != name:
+            neuron.clean()
+            if len(neuron.get_connections()) != 0:
                 temp_neurons.append(neuron)
-            # else:
-            #     ###dendrite.clean(neuron.name)
-            #     print ("No way to erase from dendrite")
 
         self.neurons = temp_neurons
 
@@ -56,6 +62,9 @@ class Brain:
         neuron_name = "N" + str(len(self.neurons))
         new_neuron = Neuron(neuron_name)
         self.neurons.append(new_neuron)
+
+    def get_neurons(self):
+        return self.neurons
 
 # def unit_tests():
 #     ### Construct two Neuron objects
