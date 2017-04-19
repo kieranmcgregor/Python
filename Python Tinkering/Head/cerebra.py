@@ -3,8 +3,8 @@ from nd_meld import Neuron
 
 class Cerebra:
     def __init__(self, name):
-        self.name = name
-        self.neurons = self.__primordial_brain()
+        self.__name = name
+        self.__neurons = self.__primordial_brain()
 
     def __primordial_brain(self):
         neurons = []
@@ -19,12 +19,28 @@ class Cerebra:
 
         return neurons
 
+    def __feedback_input(self, activated_neurons):
+        feedback = input("Reward or punish? (+ / -) ")
+        for neuron in self.__neurons:
+            if neuron in activated_neurons:
+                neuron.adjust_probability(feedback, 'active')
+            else:
+                neuron.adjust_probability(feedback, 'inactive')
+
+        return feedback
+
+    def __construct_predendrites(self, activated_neurons, feedback):
+        for neuron1 in activated_neurons:
+            for neuron2 in activated_neurons:
+                if neuron1 != neuron2:
+                    neuron1.construct_predendrite(neuron2, feedback)
+
     def activate(self):
         activated_neurons = []
         activate = 1
         rest = 0
 
-        for neuron in self.neurons:
+        for neuron in self.__neurons:
             activation_probability = neuron.get_activation_probability()
             signal = ((activate) if random.random() <
                         activation_probability else (rest))
@@ -32,39 +48,25 @@ class Cerebra:
                 neuron.activate()
                 activated_neurons.append(neuron)
 
-        self.__feedback_input(activated_neurons)
-
-    def __feedback_input(self, activated_neurons):
-        feedback = input("Reward or punish? (+ / -) ")
-        for neuron in self.neurons:
-            if neuron in activated_neurons:
-                neuron.adjust_probability(feedback, 'active')
-            else:
-                neuron.adjust_probability(feedback, 'inactive')
-
-        for neuron1 in activated_neurons:
-            for neuron2 in activated_neurons:
-                if neuron1 != neuron2:
-                    predendrite_absent = neuron1.check_connections(neuron2, feedback)
-                    if (predendrite_absent) and (feedback == '+'):
-                        neuron1.add_predendrite(neuron2)
+        feedback = self.__feedback_input(activated_neurons)
+        self.__construct_predendrites(activated_neurons, feedback)
 
     def clean(self):
         temp_neurons = []
-        for neuron in self.neurons:
+        for neuron in self.__neurons:
             neuron.clean()
             if len(neuron.get_connections()) != 0:
                 temp_neurons.append(neuron)
 
-        self.neurons = temp_neurons
+        self.__neurons = temp_neurons
 
     def add_neurons(self):
-        neuron_name = "N" + str(len(self.neurons))
+        neuron_name = "N" + str(len(self.__neurons))
         new_neuron = Neuron(neuron_name)
-        self.neurons.append(new_neuron)
+        self.__neurons.append(new_neuron)
 
     def get_neurons(self):
-        return self.neurons
+        return self.__neurons
 
 # def unit_tests():
 #     ### Construct two Neuron objects

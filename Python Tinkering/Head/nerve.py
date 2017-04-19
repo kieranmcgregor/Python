@@ -2,9 +2,9 @@ import random
 
 class Nerve:
     def __init__(self, name):
-        self.name = name
-        self.score = 0
-        self.output = self.__set_output()
+        self.__name = name
+        self.__score = 0
+        self.__output = self.__set_output()
 
     def __set_output(self):
         canvas_width = 128
@@ -23,23 +23,23 @@ class Nerve:
         return ((x_pos, y_pos), (rgb_index, intensity, alpha))
 
     def propagate(self):
-        print ("{} Output: {}".format(self.name, self.output))
+        print ("{} Output: {}".format(self.__name, self.__output))
 
     def adjust_score(self, feedback):
         if feedback == "+":
-            self.score = 0
+            self.__score = 0
         elif feedback == "-":
-            self.score += 1
-        print ("{} score: {}".format(self.name, self.score))
+            self.__score += 1
+        print ("{} score: {}".format(self.__name, self.__score))
 
     def get_name(self):
-        return self.name
+        return self.__name
 
     def get_score(self):
-        return self.score
+        return self.__score
 
     def get_output(self):
-        return self.output
+        return self.__output
 
 # def unit_tests():
 #     ### Construct two Dendrite objects

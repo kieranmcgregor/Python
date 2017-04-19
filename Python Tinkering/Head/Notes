@@ -1,0 +1,33 @@
+*** Cerebra ***
+Born    Upon beginning of program (may change later)
+Life    Manage Neurons
+Death   Upon death of all Neurons
+
+*** Neurons ***
+Born    When all Neurons reach continue_propagation_certainty and when neuronal
+        activity levels reach a certain threshold
+Life    -Manage birth, life and death of PreDendrites and Dendrites
+        -Manage inputs received from Dendrites
+        -Produces PreDendrites and Dendrites
+        -Propagates signal to Dendrites
+Death   When Neuron reaches rest certainty
+
+*** PreDendrite ***
+Born    When Neurons and Nerves for together
+Life    -Track occurrences of Neuron-Nerve combinations
+        -Decays by 1 count over time
+        -Negative feedback decreases count by 3
+Death   -When count reaches 0
+        -When count reaches threshold for Dendrite creation
+        -When input Neuron or output Neuron reaches rest certainty or Nerve
+        dies
+
+*** Dendrite ***
+Born    When Neuron is created or PreDendrite reaches threshold
+Life    Propagate signals from Neuron to Neuron and Neuron to Nerve
+Death   When Dendrite has zero connections
+
+*** Nerve ***
+Born    When Neuron is born
+Life    Produce outputs
+Death   When attached Dendrite reaches stop_propagation_certainty

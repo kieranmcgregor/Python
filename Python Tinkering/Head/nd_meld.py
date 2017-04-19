@@ -3,228 +3,239 @@ from predendrite import PreDendrite
 
 class Neuron:
     def __init__(self, name):
-        self.name = name
-        self.predendrite_count = 0
-        self.dendrite_count = 0
-        self.dead_predendrites = []
-        self.dead_dendrites = []
-        self.activation_probability = 0.5
-        self.signal = 0
-        self.connections = self.__connections_initializer()
-        self.status = 'ready'
-        self.variability = 0.01
-        self.predendrite_threshold = 10
+        self.__name = name
+        self.__predendrite_count = 0
+        self.__dendrite_count = 0
+        self.__dead_predendrites = []
+        self.__dead_dendrites = []
+        self.__activation_probability = 0.5
+        self.__signal = 0
+        self.__connections = self.__connections_initializer()
+        self.__status = 'ready'
+        self.__variability = 0.01
+        self.__predendrite_threshold = 10
 
     def __connections_initializer(self):
-        dendrite_name = "D" + str(self.dendrite_count)
+        dendrite_name = "D" + str(self.__dendrite_count)
         new_dendrite = Dendrite(dendrite_name)
-        self.dendrite_count += 1
+        self.__dendrite_count += 1
         return [new_dendrite]
 
     def __set_probability(self, feedback, state):
         if feedback == '+':
             if state == 'active':
-                self.activation_probability += random.uniform(0, self.variability)
+                self.__activation_probability += random.uniform(0, self.__variability)
             elif state == 'inactive':
-                self.activation_probability -= random.uniform(0, self.variability)
+                self.__activation_probability -= random.uniform(0, self.__variability)
         elif feedback == '-':
             if state == 'active':
-                self.activation_probability -= random.uniform(0, self.variability)
+                self.__activation_probability -= random.uniform(0, self.__variability)
             elif state == 'inactive':
-                self.activation_probability += random.uniform(0, self.variability)
+                self.__activation_probability += random.uniform(0, self.__variability)
 
         rest_certainty = 0
         activate_certainty = 1
 
-        if self.activation_probability < rest_certainty:
-            self.activation_probability = rest_certainty
-        elif self.activation_probability > activate_certainty:
-            self.activation_probability = activate_certainty
+        if self.__activation_probability < rest_certainty:
+            self.__activation_probability = rest_certainty
+        elif self.__activation_probability > activate_certainty:
+            self.__activation_probability = activate_certainty
 
     def __reset(self):
-        self.status = 'ready'
-        self.signal = 0
+        self.__status = 'ready'
+        self.__signal = 0
 
-    def check_connections(self, neuron, feedback):
-        connection_absent = True
-        for connection in self.connections:
-            for connections_connection in connection.get_connection():
+    def construct_predendrite(self, neuron, feedback):
+        predendrite_absent = True
+        predendrite_links = [neuron]
+
+        for connection in self.__connections:
+            for connections_connection in connection.get_connections():
                 if connections_connection == neuron:
-                    if type(connection) == Dendrite:
-                        connection_absent = False
-
-                    elif type(connection) == PreDendrite:
+                    predendrite_absent = False
+                    if type(connection) == PreDendrite:
                         predendrite = connection
                         predendrite.adjust_score(feedback)
-                        connection_absent = False
-                elif connection.get_connection() == Nerve:
-                    connection_absent = False
+                elif type(connections_connection) == Nerve:
+                    if type(connection) == Dendrite:
+                        dendrite = connection
+                        if dendrite.get_signal() == 1:
+                            print (dendrite.get_name(), dendrite.get_connections())
+                        else:
+                            predendrite_absent = False
 
-        return connection_absent
+        if (predendrite_absent) and (feedback == '+'):
+            print (predendrite_links)
+            self.add_predendrite(predendrite_links)
 
     def add_predendrite(self, connection):
         predendrite_name = ''
 
-        if len(self.dead_predendrites) == 0:
-            predendrite_name = "P" + str(self.predendrite_count)
-            self.predendrite_count += 1
+        if len(self.__dead_predendrites) == 0:
+            predendrite_name = "P" + str(self.__predendrite_count)
+            self.__predendrite_count += 1
         else:
-            predendrite_name = self.dead_predendrites[0]
+            predendrite_name = self.__dead_predendrites[0]
 
         new_predendrite = PreDendrite(predendrite_name, connection)
-        self.connections.append(new_predendrite)
+        self.__connections.append(new_predendrite)
 
     def add_dendrite(self, connection):
         dendrite_name = ''
 
-        if len(self.dead_dendrites) == 0:
-            dendrite_name = "D" + str(self.dendrite_count)
-            self.dendrite_count += 1
+        if len(self.__dead_dendrites) == 0:
+            dendrite_name = "D" + str(self.__dendrite_count)
+            self.__dendrite_count += 1
         else:
-            dendrite_name = self.dead_dendrites[0]
+            dendrite_name = self.__dead_dendrites[0]
 
         new_dendrite = Dendrite(dendrite_name, connection)
-        self.connections.append(new_dendrite)
+        self.__connections.append(new_dendrite)
 
     def clean(self):
+        self.__reset()
+
         temp_dendrites = []
         temp_predendrites = []
 
-        for connection in self.connections:
+        for connection in self.__connections:
             if type(connection) ==  Dendrite:
                 dendrite = connection
-                dendrite.clean(self.activation_probability)
+                dendrite.clean(self.__activation_probability)
 
-                if len(dendrite.get_connection()) > 0:
+                if len(dendrite.get_connections()) > 0:
                     temp_dendrites.append(dendrite)
                 else:
-                    self.dead_dendrites.append(dendrite.get_name())
+                    self.__dead_dendrites.append(dendrite.get_name())
 
             elif type(connection) == PreDendrite:
                 predendrite = connection
 
-                if self.activation_probability > 0:
-                    if predendrite.get_score() >= self.predendrite_threshold:
-                        for connection in predendrite.get_connection():
-                            self.add_dendrite(connection)
-                        self.dead_predendrites.append(predendrite.get_name())
+                if self.__activation_probability > 0:
+                    if predendrite.get_score() >= self.__predendrite_threshold:
+                        self.add_dendrite(predendrite.get_connections())
+                        self.__dead_predendrites.append(predendrite.get_name())
 
                     elif predendrite.get_score() <= 0:
-                        self.dead_predendrites.append(predendrite.get_name())
+                        self.__dead_predendrites.append(predendrite.get_name())
 
                     else:
                         temp_predendrites.append(predendrite)
 
-        self.connections = temp_predendrites + temp_dendrites
+        self.__connections = temp_predendrites + temp_dendrites
 
     def activate(self):
-        if self.status == 'ready':
-            self.status = 'busy'
-            print ("{} activated".format(self.name))
-            for connection in self.connections:
+        if self.__status == 'ready':
+            self.__status = 'busy'
+            print ("{} activated".format(self.__name))
+            for connection in self.__connections:
                 if type(connection) == Dendrite:
                     dendrite = connection
                     dendrite.propagate()
 
     def adjust_probability(self, feedback, state):
-        self.__reset()
         self.__set_probability(feedback, state)
         print ("{} firing probability: {}"
-                .format(self.name, self.activation_probability))
-        print ("{} {}".format(self.name, len(self.connections)))
+                .format(self.__name, self.__activation_probability))
+        print ("{} {}".format(self.__name, len(self.__connections)))
 
-        for connection in self.connections:
+        for connection in self.__connections:
             if type(connection) == Dendrite:
                 dendrite = connection
                 dendrite.adjust_probability(feedback)
 
     def manage_inputs(self, input_signal):
         continue_propagation_threshold = 1
-        if self.status == 'ready':
-            self.signal += input_signal
-            print ("{} input signal: {}".format(self.name, self.signal))
-            if self.signal >= continue_propagation_threshold:
-                self.signal = 0
+        if self.__status == 'ready':
+            self.__signal += input_signal
+            print ("{} input signal: {}".format(self.__name, self.__signal))
+            if self.__signal >= continue_propagation_threshold:
+                self.__signal = 0
                 self.activate()
 
     def get_name(self):
-        return self.name
+        return self.__name
 
     def get_activation_probability(self):
-        return self.activation_probability
+        return self.__activation_probability
 
     def get_score(self):
-        return self.score
+        return self.__score
 
     def get_connections(self):
-        return self.connections
+        return self.__connections
 
 #### Dendrite Class starts #####
 from nerve import Nerve
 
 class Dendrite:
-    def __init__(self, name, connection = None):
-        self.name = name
-        self.propagation_probability = 0.5
-        self.signal = 0
-        self.connection = self.__connection_initializer(connection)
-        self.variability = 0.01
+    def __init__(self, name, connections = None):
+        self.__name = name
+        self.__propagation_probability = 0.5
+        self.__signal = 0
+        self.__connections = self.__connection_initializer(connections)
+        self.__variability = 0.01
 
     def __connection_initializer(self, connection):
-        if self.name == 'D0' and connection == None:
+        if self.__name == 'D0' and connection == None:
             V0 = Nerve('V0')
             return [V0]
         else:
-            return [connection]
+            return connections
 
     def __set_probability(self, feedback):
         neutral_signal = 0
 
-        signal = self.signal
+        signal = self.__signal
         if feedback == '+':
             if signal > neutral_signal:
-                self.propagation_probability += random.uniform(0, self.variability)
+                self.__propagation_probability += random.uniform(0, self.__variability)
             elif signal < neutral_signal:
-                self.propagation_probability -= random.uniform(0, self.variability)
+                self.__propagation_probability -= random.uniform(0, self.__variability)
         elif feedback == '-':
             if signal > neutral_signal:
-                self.propagation_probability -= random.uniform(0, self.variability)
+                self.__propagation_probability -= random.uniform(0, self.__variability)
             elif signal < neutral_signal:
-                self.propagation_probability += random.uniform(0, self.variability)
+                self.__propagation_probability += random.uniform(0, self.__variability)
 
         stop_propagation_certainty = 0
         continue_propagation_certainty = 1
 
-        if self.propagation_probability < stop_propagation_certainty:
-            self.propagation_probability = stop_propagation_certainty
-        elif self.propagation_probability > continue_propagation_certainty:
-            self.propagation_probability = continue_propagation_certainty
+        if self.__propagation_probability < stop_propagation_certainty:
+            self.__propagation_probability = stop_propagation_certainty
+        elif self.__propagation_probability > continue_propagation_certainty:
+            self.__propagation_probability = continue_propagation_certainty
 
     def __set_signal(self):
         send_continue_propagation = 1
         send_stop_propagation = -1
-        self.signal = ((send_continue_propagation) if random.random() <
-                        self.propagation_probability else (send_stop_propagation))
+        self.__signal = ((send_continue_propagation) if random.random() <
+                        self.__propagation_probability else (send_stop_propagation))
+
+    def __reset(self):
+        self.__signal = 0
 
     def clean(self, neuron_ap = None):
+        self.__reset()
+
         stop_propagation_certainty = 0
         dead_neuron = 0
         temp_connections = []
 
         if neuron_ap == dead_neuron:
-            self.connections = []
+            self.__connections = []
         else:
-            for connection in self.connection:
+            for connection in self.__connections:
                 if connection.get_name()[0] == 'V':
-                    if (self.propagation_probability > stop_propagation_certainty):
+                    if (self.__propagation_probability > stop_propagation_certainty):
                         temp_connections.append(connection)
-            self.connections = temp_connections
+            self.__connections = temp_connections
 
     def propagate(self):
         self.__set_signal()
-        signal = self.signal
-        print ("{} Signal: {}".format(self.name, signal))
-        for connection in self.connection:
+        signal = self.__signal
+        print ("{} Signal: {}".format(self.__name, signal))
+        for connection in self.__connections:
             if type(connection) == Nerve:
                 if signal == 1:
                     connection.propagate()
@@ -234,24 +245,21 @@ class Dendrite:
                 print ("Not Neuron or Nerve type connection, uh oh!")
 
     def add_connection(self, connection):
-        self.connections.append(connection)
+        self.__connections.append(connection)
 
     def adjust_probability(self, feedback):
         self.__set_probability(feedback)
         print ("{} Propagation probability: {}"
-                .format(self.name, self.propagation_probability))
+                .format(self.__name, self.__propagation_probability))
 
     def get_name(self):
-        return self.name
+        return self.__name
 
     def get_probability(self):
-        return self.propagation_probability
+        return self.__propagation_probability
 
     def get_signal(self):
-        return self.signal
+        return self.__signal
 
-    def get_score(self):
-        return self.score
-
-    def get_connection(self):
-        return self.connection
+    def get_connections(self):
+        return self.__connections
