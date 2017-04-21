@@ -2,13 +2,13 @@ import random
 from nd_meld import Neuron
 
 class Cerebra:
-    def __init__(self, name):
+    def __init__(self, name, number_of_neurons):
         self.__name = name
-        self.__neurons = self.__primordial_brain()
+        self.__neurons = self.__primordial_brain(number_of_neurons)
 
-    def __primordial_brain(self):
+    def __primordial_brain(self, number_of_neurons):
         neurons = []
-        initial_neuron_count = 4
+        initial_neuron_count = number_of_neurons
         index = 0
 
         while index < initial_neuron_count:
@@ -30,16 +30,21 @@ class Cerebra:
         return feedback
 
     def __construct_predendrites(self, activated_neurons, feedback):
+        activated_nerves = []
+        for neuron in activated_neurons:
+            activated_nerves += neuron.get_activated_nerves()
         for neuron1 in activated_neurons:
+            other_activated_neurons = []
             for neuron2 in activated_neurons:
                 if neuron1 != neuron2:
-                    neuron1.construct_predendrite(neuron2, feedback)
+                    other_activated_neurons.append(neuron2)
+            print ("OAN {}".format(other_activated_neurons))
+            neuron1.construct_predendrite(activated_nerves, other_activated_neurons, feedback)
 
     def activate(self):
         activated_neurons = []
         activate = 1
         rest = 0
-
         for neuron in self.__neurons:
             activation_probability = neuron.get_activation_probability()
             signal = ((activate) if random.random() <

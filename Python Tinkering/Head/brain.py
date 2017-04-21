@@ -3,7 +3,14 @@ from cerebra import Cerebra
 def build_cerebra():
     build = input("Would you like to start? (y/n)\n")
     if build[0].lower() == 'y':
-        return Cerebra("C1")
+        number_of_neurons = input("How many neurons to start?\n")
+        if not number_of_neurons.isnumeric():
+            print ("Invalid non-numeric entry, using default of 2.")
+            number_of_neurons = 2
+        else:
+            print ("Creating Cerebra with {} Neurons".format(int(number_of_neurons)))
+
+        return Cerebra("C1", int(number_of_neurons))
 
     elif build[0].lower() == 'n':
         return None
@@ -18,7 +25,6 @@ def main():
         run = False
 
     while run:
-        cerebra.clean()
         # if rounds >= threshold:
         #     rounds = 0
         #     cerebra.add_neurons()
@@ -36,6 +42,8 @@ def main():
         else:
             run = False
             print ("Your brain is dead. We hope you enjoyed!")
+
+        cerebra.clean()
 
         # rounds += 1
 

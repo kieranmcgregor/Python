@@ -1,4 +1,5 @@
 import random
+from collections import Counter
 from predendrite import PreDendrite
 
 class Neuron:
@@ -10,15 +11,16 @@ class Neuron:
         self.__dead_dendrites = []
         self.__activation_probability = 0.5
         self.__signal = 0
-        self.__connections = self.__connections_initializer()
         self.__status = 'ready'
         self.__variability = 0.01
         self.__predendrite_threshold = 10
+        self.__connections = self.__connection_initializer()
 
-    def __connections_initializer(self):
-        dendrite_name = "D" + str(self.__dendrite_count)
-        new_dendrite = Dendrite(dendrite_name)
+    def __connection_initializer(self, connections = None):
+        dendrite_name = ''
+        dendrite_name = "D" + str(self.__name[1:]) + str(self.__dendrite_count)
         self.__dendrite_count += 1
+        new_dendrite = Dendrite(dendrite_name, connections)
         return [new_dendrite]
 
     def __set_probability(self, feedback, state):
@@ -45,30 +47,57 @@ class Neuron:
         self.__status = 'ready'
         self.__signal = 0
 
-    def construct_predendrite(self, neuron, feedback):
-        predendrite_absent = True
-        predendrite_links = [neuron]
+    def get_activated_nerves(self):
+        activated_nerves = []
+        for connection in self.get_connections():
+            if type(connection) == Dendrite:
+                dendrite = connection
+                if dendrite.get_signal() == 1:
+                    if type(dendrite.get_connections()[0]) == Nerve:
+                        for nerve in dendrite.get_connections():
+                            if nerve not in activated_nerves:
+                                activated_nerves.append(nerve)
+        return activated_nerves
 
-        for connection in self.__connections:
-            for connections_connection in connection.get_connections():
-                if connections_connection == neuron:
-                    predendrite_absent = False
-                    if type(connection) == PreDendrite:
-                        predendrite = connection
-                        predendrite.adjust_score(feedback)
-                elif type(connections_connection) == Nerve:
-                    if type(connection) == Dendrite:
-                        dendrite = connection
-                        if dendrite.get_signal() == 1:
-                            print (dendrite.get_name(), dendrite.get_connections())
-                        else:
-                            predendrite_absent = False
+    def construct_predendrite(self, activated_nerves, other_activated_neurons, feedback):
+        neurons_absent = True
+        nerves_absent = True
+        all_elements_absent = True
+        activated_elements = other_activated_neurons + activated_nerves
+        for connection in self.get_connections():
+            if Counter(connection.get_connections()) == Counter(activated_elements):
+                print ("match {}".format(connection.get_connections()))
+                all_elements_absent = False
+                if type(connection) == PreDendrite:
+                    predendrite = connection
+                    predendrite.adjust_score(feedback)
+            if Counter(connection.get_connections()) == Counter(other_activated_neurons):
+                print ("match {}".format(connection.get_connections()))
+                neurons_absent = False
+                if type(connection) == PreDendrite:
+                    predendrite = connection
+                    predendrite.adjust_score(feedback)
+            if (Counter(connection.get_connections()) == Counter(activated_nerves)):
+                print ("match {}".format(connection.get_connections()))
+                nerves_absent = False
+                if type(connection) == PreDendrite:
+                    predendrite = connection
+                    predendrite.adjust_score(feedback)
 
-        if (predendrite_absent) and (feedback == '+'):
-            print (predendrite_links)
-            self.add_predendrite(predendrite_links)
+        print (other_activated_neurons, activated_nerves, activated_elements)
 
-    def add_predendrite(self, connection):
+        if ((neurons_absent) and (feedback == '+')):
+            if len(other_activated_neurons) > 0:
+                self.add_predendrite(other_activated_neurons)
+        if ((nerves_absent) and (feedback == '+')):
+            if len(activated_nerves) > 0:
+                self.add_predendrite(activated_nerves)
+        if ((all_elements_absent) and (feedback == '+')):
+            if len(activated_elements) > 0:
+                self.add_predendrite(activated_elements)
+
+
+    def add_predendrite(self, connections):
         predendrite_name = ''
 
         if len(self.__dead_predendrites) == 0:
@@ -76,20 +105,20 @@ class Neuron:
             self.__predendrite_count += 1
         else:
             predendrite_name = self.__dead_predendrites[0]
+            self.__dead_predendrites.pop(0)
 
-        new_predendrite = PreDendrite(predendrite_name, connection)
+        new_predendrite = PreDendrite(predendrite_name, connections)
         self.__connections.append(new_predendrite)
 
-    def add_dendrite(self, connection):
+    def add_dendrite(self, connections = None):
         dendrite_name = ''
-
         if len(self.__dead_dendrites) == 0:
-            dendrite_name = "D" + str(self.__dendrite_count)
+            dendrite_name = "D" + str(self.__name[1:]) + str(self.__dendrite_count)
             self.__dendrite_count += 1
         else:
             dendrite_name = self.__dead_dendrites[0]
 
-        new_dendrite = Dendrite(dendrite_name, connection)
+        new_dendrite = Dendrite(dendrite_name, connections)
         self.__connections.append(new_dendrite)
 
     def clean(self):
@@ -138,6 +167,7 @@ class Neuron:
         print ("{} firing probability: {}"
                 .format(self.__name, self.__activation_probability))
         print ("{} {}".format(self.__name, len(self.__connections)))
+        print ("{}".format(self.__connections))
 
         for connection in self.__connections:
             if type(connection) == Dendrite:
@@ -171,15 +201,21 @@ from nerve import Nerve
 class Dendrite:
     def __init__(self, name, connections = None):
         self.__name = name
+        self.__nerve_count = 0
         self.__propagation_probability = 0.5
         self.__signal = 0
         self.__connections = self.__connection_initializer(connections)
         self.__variability = 0.01
 
-    def __connection_initializer(self, connection):
-        if self.__name == 'D0' and connection == None:
-            V0 = Nerve('V0')
-            return [V0]
+    def __connection_initializer(self, connections):
+        if connections == None:
+            nerve_name = ''
+
+            nerve_name = "V" + str(self.__name[1:]) + str(self.__nerve_count)
+            self.__nerve_count += 1
+
+            new_nerve = Nerve(nerve_name)
+            return [new_nerve]
         else:
             return connections
 
@@ -243,9 +279,6 @@ class Dendrite:
                 connection.manage_inputs(signal)
             else:
                 print ("Not Neuron or Nerve type connection, uh oh!")
-
-    def add_connection(self, connection):
-        self.__connections.append(connection)
 
     def adjust_probability(self, feedback):
         self.__set_probability(feedback)
