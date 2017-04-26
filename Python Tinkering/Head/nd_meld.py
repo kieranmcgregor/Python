@@ -47,55 +47,84 @@ class Neuron:
         self.__status = 'ready'
         self.__signal = 0
 
-    def get_activated_nerves(self):
-        activated_nerves = []
-        for connection in self.get_connections():
+    def activate(self):
+        if self.__status == 'ready':
+            self.__status = 'busy'
+            print ("{} activated".format(self.__name))
+            for connection in self.__connections:
+                if type(connection) == Dendrite:
+                    dendrite = connection
+                    dendrite.propagate()
+
+    def manage_inputs(self, input_signal):
+        continue_propagation_threshold = 1
+        if self.__status == 'ready':
+            self.__signal += input_signal
+            print ("{} input signal: {}".format(self.__name, self.__signal))
+            if self.__signal >= continue_propagation_threshold:
+                self.__signal = 0
+                self.activate()
+
+    def adjust_probability(self, feedback, state):
+        self.__set_probability(feedback, state)
+        print ("{} firing probability: {}"
+                .format(self.__name, self.__activation_probability))
+        print ("{} {}".format(self.__name, len(self.__connections)))
+        print ("{}".format(self.__connections))
+
+        for connection in self.__connections:
             if type(connection) == Dendrite:
                 dendrite = connection
-                if dendrite.get_signal() == 1:
-                    if type(dendrite.get_connections()[0]) == Nerve:
-                        for nerve in dendrite.get_connections():
-                            if nerve not in activated_nerves:
-                                activated_nerves.append(nerve)
-        return activated_nerves
+                dendrite.adjust_probability(feedback)
 
-    def construct_predendrite(self, activated_nerves, other_activated_neurons, feedback):
+    def construct_predendrite(self, other_activated_neurons, feedback):
         neurons_absent = True
-        nerves_absent = True
-        all_elements_absent = True
-        activated_elements = other_activated_neurons + activated_nerves
+        # all_elements_absent = True
+        activated_elements = other_activated_neurons
         for connection in self.get_connections():
-            if Counter(connection.get_connections()) == Counter(activated_elements):
-                print ("match {}".format(connection.get_connections()))
-                all_elements_absent = False
-                if type(connection) == PreDendrite:
-                    predendrite = connection
-                    predendrite.adjust_score(feedback)
             if Counter(connection.get_connections()) == Counter(other_activated_neurons):
-                print ("match {}".format(connection.get_connections()))
+                # print ("match {}".format(connection.get_connections()))
                 neurons_absent = False
                 if type(connection) == PreDendrite:
                     predendrite = connection
                     predendrite.adjust_score(feedback)
-            if (Counter(connection.get_connections()) == Counter(activated_nerves)):
-                print ("match {}".format(connection.get_connections()))
-                nerves_absent = False
-                if type(connection) == PreDendrite:
-                    predendrite = connection
-                    predendrite.adjust_score(feedback)
 
-        print (other_activated_neurons, activated_nerves, activated_elements)
-
+        # print (other_activated_neurons, activated_nerves, activated_elements)
         if ((neurons_absent) and (feedback == '+')):
             if len(other_activated_neurons) > 0:
                 self.add_predendrite(other_activated_neurons)
-        if ((nerves_absent) and (feedback == '+')):
-            if len(activated_nerves) > 0:
-                self.add_predendrite(activated_nerves)
-        if ((all_elements_absent) and (feedback == '+')):
-            if len(activated_elements) > 0:
-                self.add_predendrite(activated_elements)
 
+    def clean(self):
+        self.__reset()
+
+        temp_dendrites = []
+        temp_predendrites = []
+
+        if self.__activation_probability > 0:
+            for connection in self.__connections:
+                print ("{} connection {}".format(self.__name, connection))
+                if type(connection) == Dendrite:
+                    dendrite = connection
+                    dendrite.clean(self.__activation_probability)
+
+                    if len(dendrite.get_connections()) > 0:
+                        temp_dendrites.append(dendrite)
+                    else:
+                        self.__dead_dendrites.append(dendrite.get_name())
+
+                elif type(connection) == PreDendrite:
+                    predendrite = connection
+                    if predendrite.get_score() >= self.__predendrite_threshold:
+                        self.add_dendrite(predendrite.get_connections())
+                        self.__dead_predendrites.append(predendrite.get_name())
+
+                    elif predendrite.get_score() <= 0:
+                        self.__dead_predendrites.append(predendrite.get_name())
+
+                    else:
+                        temp_predendrites.append(predendrite)
+
+        self.__connections = temp_predendrites + temp_dendrites
 
     def add_predendrite(self, connections):
         predendrite_name = ''
@@ -121,68 +150,6 @@ class Neuron:
         new_dendrite = Dendrite(dendrite_name, connections)
         self.__connections.append(new_dendrite)
 
-    def clean(self):
-        self.__reset()
-
-        temp_dendrites = []
-        temp_predendrites = []
-
-        for connection in self.__connections:
-            if type(connection) ==  Dendrite:
-                dendrite = connection
-                dendrite.clean(self.__activation_probability)
-
-                if len(dendrite.get_connections()) > 0:
-                    temp_dendrites.append(dendrite)
-                else:
-                    self.__dead_dendrites.append(dendrite.get_name())
-
-            elif type(connection) == PreDendrite:
-                predendrite = connection
-
-                if self.__activation_probability > 0:
-                    if predendrite.get_score() >= self.__predendrite_threshold:
-                        self.add_dendrite(predendrite.get_connections())
-                        self.__dead_predendrites.append(predendrite.get_name())
-
-                    elif predendrite.get_score() <= 0:
-                        self.__dead_predendrites.append(predendrite.get_name())
-
-                    else:
-                        temp_predendrites.append(predendrite)
-
-        self.__connections = temp_predendrites + temp_dendrites
-
-    def activate(self):
-        if self.__status == 'ready':
-            self.__status = 'busy'
-            print ("{} activated".format(self.__name))
-            for connection in self.__connections:
-                if type(connection) == Dendrite:
-                    dendrite = connection
-                    dendrite.propagate()
-
-    def adjust_probability(self, feedback, state):
-        self.__set_probability(feedback, state)
-        print ("{} firing probability: {}"
-                .format(self.__name, self.__activation_probability))
-        print ("{} {}".format(self.__name, len(self.__connections)))
-        print ("{}".format(self.__connections))
-
-        for connection in self.__connections:
-            if type(connection) == Dendrite:
-                dendrite = connection
-                dendrite.adjust_probability(feedback)
-
-    def manage_inputs(self, input_signal):
-        continue_propagation_threshold = 1
-        if self.__status == 'ready':
-            self.__signal += input_signal
-            print ("{} input signal: {}".format(self.__name, self.__signal))
-            if self.__signal >= continue_propagation_threshold:
-                self.__signal = 0
-                self.activate()
-
     def get_name(self):
         return self.__name
 
@@ -194,6 +161,19 @@ class Neuron:
 
     def get_connections(self):
         return self.__connections
+
+    def get_activated_nerves(self):
+        activated_nerves = []
+        for connection in self.get_connections():
+            if type(connection) == Dendrite:
+                dendrite = connection
+                if dendrite.get_signal() == 1:
+                    if type(dendrite.get_connections()[0]) == Nerve:
+                        for nerve in dendrite.get_connections():
+                            if nerve not in activated_nerves:
+                                activated_nerves.append(nerve)
+        # print ("activated_nerves {}".format(activated_nerves))
+        return activated_nerves
 
 #### Dendrite Class starts #####
 from nerve import Nerve
@@ -265,6 +245,7 @@ class Dendrite:
                 if connection.get_name()[0] == 'V':
                     if (self.__propagation_probability > stop_propagation_certainty):
                         temp_connections.append(connection)
+                        connection.clean()
             self.__connections = temp_connections
 
     def propagate(self):

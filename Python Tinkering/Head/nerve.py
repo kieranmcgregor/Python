@@ -5,6 +5,7 @@ class Nerve:
         self.__name = name
         self.__score = 0
         self.__output = self.__set_output()
+        self.__status = 'ready'
 
     def __set_output(self):
         canvas_width = 128
@@ -22,7 +23,11 @@ class Nerve:
 
         return ((x_pos, y_pos), (rgb_index, intensity, alpha))
 
+    def clean(self):
+        self.__status = 'ready'
+
     def propagate(self):
+        self.__status = 'busy'
         print ("{} Output: {}".format(self.__name, self.__output))
 
     def adjust_score(self, feedback):
