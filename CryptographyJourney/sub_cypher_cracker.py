@@ -32,30 +32,13 @@ def file_loader():
             crypt_fh = open(encrypted_text, 'r')
             invalid_entry = False
         except:
-            print ("Invalid entry, please use .txt file name")
+            print ("Invalid entry, file not found.")
             continue
 
         for line in crypt_fh:
             crypt_message += line
 
     return crypt_message
-
-def ceaser_cypher_cracker(crypt_message, sample_frequencies = None):
-
-    letters = letter_counter(crypt_message)
-    letters = dict_sorter(letters)
-    frequencies = frequency_tabulator(letters)
-
-    try:
-        frequencies_plotter(frequencies, sample_frequencies)
-        shift = shift_determiner(frequencies, sample_frequencies)
-        message = ceasar_solver(crypt_message, shift)
-        print (message)
-
-    except:
-        print ("Sample.txt not found, unable to provide sample comparison.")
-        print ("Cypher frequencies:\n{}"
-                .format(frequencies))
 
 def letter_counter(message):
     letters = {}
@@ -124,6 +107,9 @@ def frequencies_plotter(frequencies, sample_frequencies):
     plt.show()
 
 def shift_determiner(crypt_freq, sample_freq):
+    # Determine shift from crypt max to sample max
+    # Needs to be expanded for multiple crypt max cases
+    # Series of numbers for shift?
     alphabet = 'abcdefghijklmnopqrstuvwxyz'
     crypt_letter_pos = 0
     sample_letter_pos = 0
@@ -154,18 +140,60 @@ def ceasar_solver(crypt_message, shift):
 
     return message
 
-def code_determiner(crypt_freq, sample_freq):
-    alphabet = 'abcdefghijklmnopqrstuvwxyz'
-    crypt_values = crypt_freq.values()
-    code = ''
-    crypt_max = max(crypt_values)
-    threshold = crypt_max * 0.70
+def code_determiner(crypt_message, sample_freq = None):
+    uncracked = True
+    cypher_length = 0
 
-    for key in crypt_freq:
-        if crypt_freq[key] > threshold:
-            code += key
+    while uncracked:
+        cypher_length += 1
+        split_letters = {}
+        solved_split = {}
 
-    print (code)
+        for idx, letter in enumerate(crypt_message):
+            try:
+                split_letters[idx % cypher_length] += letter
+            except:
+                split_letters[idx % cypher_length] = letter
+
+        for position in split_letters:
+            crypt_split = split_letters[position]
+
+            letters = letter_counter(crypt_split)
+            letters = dict_sorter(letters)
+            frequencies = frequency_tabulator(letters)
+
+            frequencies_plotter(frequencies, sample_freq)
+            shift = shift_determiner(frequencies, sample_freq)
+            message = ceasar_solver(crypt_split, shift)
+
+            solved_split[position] = message
+            print (solved_split[position])
+
+        msg = "Is the message cracked? (y/n) "
+        invalid_response = "Neither 'y' nor 'n' entered, exiting cracking."
+        uncracked = quit(msg, invalid_response)
+
+def quit(message, invalid_response):
+    invalid_response = True
+
+    while invalid_response:
+        answer = input(message)
+
+        try:
+            quit = answer.lower()[0]
+        except:
+            print ("Invalid response, please enter 'y' for yes or 'n' for no")
+            continue
+
+        if quit == 'y':
+            return False
+
+        elif quit == 'n':
+            return True
+
+        else:
+            print (invalid_response)
+            return True
 
 def main():
     decrypt_file = True
@@ -176,29 +204,10 @@ def main():
 
         crypt_message = file_loader()
 
-        answer = input("Is it a [c]easar or [v]igenere cipher? ")
+        code = code_determiner(crypt_message, sample_frequencies)
 
-        try:
-            cipher_kind = answer[0].lower()
-        except:
-            print ("Invalid entry, blank string or non-string provided. Please type 'c' or 'v', respectively, for a ceasar\nor vigenere cipher.")
-            continue
-
-        if cipher_kind == 'c':
-            ceaser_cypher_cracker(crypt_message, sample_frequencies)
-        elif cipher_kind == 'v':
-            code = code_determiner(frequencies, sample_frequencies)
-        else:
-            print ("Invalid entry, Please type 'c' or 'v', respectively, for a ceasar of vigenere cipher.")
-            continue
-
-        answer = input("Do you want to continue? (y/n): ")
-
-        try:
-            keep_going = answer[0].lower()
-            if keep_going == 'n':
-                decrypt_file = False
-        except:
-            print("Invalid entry, continuing...")
+        msg = "Would you like to quit? (y/n) "
+        invalid_response = "Neither 'y' nor 'n' entered, exiting program."
+        decrypt_file = quit(msg, invalid_response)
 
 main()
