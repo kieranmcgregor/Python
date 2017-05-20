@@ -1,21 +1,75 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def letter_counter(handler):
+def sample_loader():
+    sample_frequencies = ''
+    sample_message = ''
+
+    try:
+        sample_text_fh = open('Sample.txt', 'r')
+
+        for line in sample_text_fh:
+            sample_message += line
+
+        sample_letters = letter_counter(sample_message)
+        sample_letters = dict_sorter(sample_letters)
+        sample_frequencies = frequency_tabulator(sample_letters)
+    except:
+        sample_frequencies = None
+        print ("Sample.txt not found, unable to provide sample comparison.")
+
+    return sample_frequencies
+
+def file_loader():
+    invalid_entry = True
+    crypt_message = ''
+
+    while invalid_entry:
+
+        encrypted_text = input("Please enter .txt file name: ")
+
+        try:
+            crypt_fh = open(encrypted_text, 'r')
+            invalid_entry = False
+        except:
+            print ("Invalid entry, please use .txt file name")
+            continue
+
+        for line in crypt_fh:
+            crypt_message += line
+
+    return crypt_message
+
+def ceaser_cypher_cracker(crypt_message, sample_frequencies = None):
+
+    letters = letter_counter(crypt_message)
+    letters = dict_sorter(letters)
+    frequencies = frequency_tabulator(letters)
+
+    try:
+        frequencies_plotter(frequencies, sample_frequencies)
+        shift = shift_determiner(frequencies, sample_frequencies)
+        message = ceasar_solver(crypt_message, shift)
+        print (message)
+
+    except:
+        print ("Sample.txt not found, unable to provide sample comparison.")
+        print ("Cypher frequencies:\n{}"
+                .format(frequencies))
+
+def letter_counter(message):
     letters = {}
     count = 0
 
-    for line in handler:
-        line = line.strip()
-        for letter in line:
-            letter = letter.strip()
-            if len(letter) > 0:
-                try:
-                    letters[letter.lower()] += 1
-                except:
-                    letters[letter.lower()] = 1
+    for letter in message:
+        letter = letter.strip()
+        if len(letter) > 0:
+            try:
+                letters[letter.lower()] += 1
+            except:
+                letters[letter.lower()] = 1
 
-            count += 1
+        count += 1
 
     letters['_count'] = count
 
@@ -49,7 +103,7 @@ def frequencies_plotter(frequencies, sample_frequencies):
     pos1 = np.arange(len(keys_list))
     width = 1.0
 
-    plt.subplot(221)
+    plt.subplot(121)
     plt.bar(pos1, values, width = width)
     plt.xticks(pos1, keys_list)
 
@@ -60,7 +114,7 @@ def frequencies_plotter(frequencies, sample_frequencies):
     sample_values = sample_frequencies.values()
     pos2 = np.arange(len(sample_keys_list))
 
-    plt.subplot(222)
+    plt.subplot(122)
     plt.bar(pos2, sample_values, width = width)
     plt.xticks(pos2, sample_keys_list)
 
@@ -88,12 +142,11 @@ def shift_determiner(crypt_freq, sample_freq):
 
     return shift
 
-def solve(encrypted_text, shift):
-    crypt_fh = open(encrypted_text, 'r')
+def ceasar_solver(crypt_message, shift):
     alphabet = 'abcdefghijklmnopqrstuvwxyz'
     message = ''
 
-    for line in crypt_fh:
+    for line in crypt_message:
         line = line.strip()
         for letter in line:
             true_letter = alphabet[(alphabet.find(letter) - shift) % 26]
@@ -101,49 +154,51 @@ def solve(encrypted_text, shift):
 
     return message
 
+def code_determiner(crypt_freq, sample_freq):
+    alphabet = 'abcdefghijklmnopqrstuvwxyz'
+    crypt_values = crypt_freq.values()
+    code = ''
+    crypt_max = max(crypt_values)
+    threshold = crypt_max * 0.70
+
+    for key in crypt_freq:
+        if crypt_freq[key] > threshold:
+            code += key
+
+    print (code)
+
 def main():
     decrypt_file = True
 
-    while decrypt_file:
-        crypt_fh = ''
-        sample_text_fh = ''
+    sample_frequencies = sample_loader()
 
-        encrypted_text = input("Please enter .txt file name: ")
+    while decrypt_file:
+
+        crypt_message = file_loader()
+
+        answer = input("Is it a [c]easar or [v]igenere cipher? ")
 
         try:
-            crypt_fh = open(encrypted_text, 'r')
+            cipher_kind = answer[0].lower()
         except:
-            print ("Invalid entry, please use .txt file name")
+            print ("Invalid entry, blank string or non-string provided. Please type 'c' or 'v', respectively, for a ceasar\nor vigenere cipher.")
             continue
 
-        letters = letter_counter(crypt_fh)
-        letters = dict_sorter(letters)
-        frequencies = frequency_tabulator(letters)
+        if cipher_kind == 'c':
+            ceaser_cypher_cracker(crypt_message, sample_frequencies)
+        elif cipher_kind == 'v':
+            code = code_determiner(frequencies, sample_frequencies)
+        else:
+            print ("Invalid entry, Please type 'c' or 'v', respectively, for a ceasar of vigenere cipher.")
+            continue
+
+        answer = input("Do you want to continue? (y/n): ")
 
         try:
-            sample_text_fh = open('Sample.txt', 'r')
-
+            keep_going = answer[0].lower()
+            if keep_going == 'n':
+                decrypt_file = False
         except:
-            print ("Sample.txt not found, unable to provide sample comparison.")
-            print ("Cypher frequencies:\n{}"
-                    .format(frequencies))
-
-        sample_letters = letter_counter(sample_text_fh)
-        sample_letters = dict_sorter(sample_letters)
-        sample_frequencies = frequency_tabulator(sample_letters)
-
-        # print ("Cypher frequencies:\n{}\n Sample frequencies:\n{}"
-        #         .format(frequencies, sample_frequencies))
-
-        frequencies_plotter(frequencies, sample_frequencies)
-
-        shift = shift_determiner(frequencies, sample_frequencies)
-        message = solve(encrypted_text, shift)
-        print (message)
-
-        keep_going = input("Do you want to continue? (y/n): ")
-
-        if keep_going[0].lower() == 'n':
-            decrypt_file = False
+            print("Invalid entry, continuing...")
 
 main()
