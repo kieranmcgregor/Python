@@ -116,13 +116,30 @@ def shift_determiner(crypt_freq, sample_freq):
     crypt_max = max(crypt_freq.values())
     sample_max = max(sample_freq.values())
 
+    for letter, freq in sample_freq.items():
+        if freq == sample_max:
+            sample_letter_pos += alphabet.find(letter)
+
     for letter, freq in crypt_freq.items():
         if freq == crypt_max:
+            print (letter)
             crypt_letter_pos = alphabet.find(letter)
+
+    shift = (crypt_letter_pos - sample_letter_pos) % 26
+
+    return shift
+
+def key_shift_determiner(key_letter, sample_freq):
+    alphabet = 'abcdefghijklmnopqrstuvwxyz'
+    crypt_letter_pos = 0
+    sample_letter_pos = 0
+    sample_max = max(sample_freq.values())
 
     for letter, freq in sample_freq.items():
         if freq == sample_max:
             sample_letter_pos += alphabet.find(letter)
+
+    crypt_letter_pos = alphabet.find(key_letter)
 
     shift = (crypt_letter_pos - sample_letter_pos) % 26
 
@@ -173,6 +190,26 @@ def code_determiner(crypt_message, sample_freq = None):
         invalid_response = "Neither 'y' nor 'n' entered, exiting cracking."
         uncracked = quit(msg, invalid_response)
 
+def keyword_cracker(crypt_message, keyword, sample_freq):
+    uncracked = True
+
+    while uncracked:
+        shift = []
+        message = ""
+        for key_idx, key_letter in enumerate(keyword):
+            shift.append(key_shift_determiner(key_letter, sample_freq))
+
+        for crypt_idx, crypt_letter in enumerate(crypt_message):
+            for shift_idx, pos in enumerate(shift):
+                if crypt_idx % len(shift) == shift_idx:
+                    message += ceasar_solver(crypt_letter, pos)
+
+        print (message)
+
+        msg = "Is the message cracked? (y/n) "
+        invalid_response = "Neither 'y' nor 'n' entered, exiting cracking."
+        uncracked = quit(msg, invalid_response)
+
 def quit(message, invalid_response):
     invalid_response = True
 
@@ -204,7 +241,13 @@ def main():
 
         crypt_message = file_loader()
 
-        code = code_determiner(crypt_message, sample_frequencies)
+        keyword = input("What is the a keyword? Enter '!' if there isn't one:\n")
+        keyword = keyword.lower()
+
+        if keyword == "!":
+            code = code_determiner(crypt_message, sample_frequencies)
+        else:
+            keyword_cracker(crypt_message, keyword, sample_frequencies)
 
         msg = "Would you like to quit? (y/n) "
         invalid_response = "Neither 'y' nor 'n' entered, exiting program."
