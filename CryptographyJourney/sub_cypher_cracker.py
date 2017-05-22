@@ -106,57 +106,6 @@ def frequencies_plotter(frequencies, sample_frequencies):
 
     plt.show()
 
-def shift_determiner(crypt_freq, sample_freq):
-    # Determine shift from crypt max to sample max
-    # Needs to be expanded for multiple crypt max cases
-    # Series of numbers for shift?
-    alphabet = 'abcdefghijklmnopqrstuvwxyz'
-    crypt_letter_pos = 0
-    sample_letter_pos = 0
-    crypt_max = max(crypt_freq.values())
-    sample_max = max(sample_freq.values())
-
-    for letter, freq in sample_freq.items():
-        if freq == sample_max:
-            sample_letter_pos += alphabet.find(letter)
-
-    for letter, freq in crypt_freq.items():
-        if freq == crypt_max:
-            print (letter)
-            crypt_letter_pos = alphabet.find(letter)
-
-    shift = (crypt_letter_pos - sample_letter_pos) % 26
-
-    return shift
-
-def key_shift_determiner(key_letter, sample_freq):
-    alphabet = 'abcdefghijklmnopqrstuvwxyz'
-    crypt_letter_pos = 0
-    sample_letter_pos = 0
-    sample_max = max(sample_freq.values())
-
-    for letter, freq in sample_freq.items():
-        if freq == sample_max:
-            sample_letter_pos += alphabet.find(letter)
-
-    crypt_letter_pos = alphabet.find(key_letter)
-
-    shift = (crypt_letter_pos - sample_letter_pos) % 26
-
-    return shift
-
-def ceasar_solver(crypt_message, shift):
-    alphabet = 'abcdefghijklmnopqrstuvwxyz'
-    message = ''
-
-    for line in crypt_message:
-        line = line.strip()
-        for letter in line:
-            true_letter = alphabet[(alphabet.find(letter) - shift) % 26]
-            message += true_letter
-
-    return message
-
 def code_determiner(crypt_message, sample_freq = None):
     uncracked = True
     cypher_length = 0
@@ -164,7 +113,8 @@ def code_determiner(crypt_message, sample_freq = None):
     while uncracked:
         cypher_length += 1
         split_letters = {}
-        solved_split = {}
+        key_letter_groups = []
+        keywords = []
 
         for idx, letter in enumerate(crypt_message):
             try:
@@ -180,35 +130,74 @@ def code_determiner(crypt_message, sample_freq = None):
             frequencies = frequency_tabulator(letters)
 
             frequencies_plotter(frequencies, sample_freq)
-            shift = shift_determiner(frequencies, sample_freq)
-            message = ceasar_solver(crypt_split, shift)
+            key_letter_groups.append(keyword_determiner(frequencies))
 
-            solved_split[position] = message
-            print (solved_split[position])
+        print(key_letter_groups)
+        # for group in key_letter_groups:
+        #     for key_letter in group:
+        #         for keyword in keywords:
+
+        # keyword_cracker(split_letters[position], key_letter, sample_freq)
 
         msg = "Is the message cracked? (y/n) "
         invalid_response = "Neither 'y' nor 'n' entered, exiting cracking."
         uncracked = quit(msg, invalid_response)
+
+def keyword_determiner(crypt_freq):
+    # Determine shift from crypt max to sample max
+    # Needs to be expanded for multiple crypt max cases
+    # Series of numbers for shift?
+    alphabet = 'abcdefghijklmnopqrstuvwxyz'
+    crypt_letter_pos = 0
+    keyword = ""
+    crypt_max = max(crypt_freq.values())
+
+    for letter, freq in crypt_freq.items():
+        if freq == crypt_max:
+            keyword += letter
+
+    return keyword
+
+def key_shift_determiner(key_letter, sample_freq):
+    alphabet = 'abcdefghijklmnopqrstuvwxyz'
+    crypt_letter_pos = 0
+    sample_letter_pos = 0
+    sample_max = max(sample_freq.values())
+
+    for letter, freq in sample_freq.items():
+        if freq == sample_max:
+            sample_letter_pos += alphabet.find(letter)
+
+    crypt_letter_pos = alphabet.find(key_letter)
+
+    key_shift = (crypt_letter_pos - sample_letter_pos) % 26
+
+    return key_shift
+
+def ceasar_solver(crypt_message, shift):
+    alphabet = 'abcdefghijklmnopqrstuvwxyz'
+    message = ''
+
+    for line in crypt_message:
+        line = line.strip()
+        for letter in line:
+            true_letter = alphabet[(alphabet.find(letter) - shift) % 26]
+            message += true_letter
+
+    return message
 
 def keyword_cracker(crypt_message, keyword, sample_freq):
-    uncracked = True
+    shift = []
+    message = ""
+    for key_idx, key_letter in enumerate(keyword):
+        shift.append(key_shift_determiner(key_letter, sample_freq))
 
-    while uncracked:
-        shift = []
-        message = ""
-        for key_idx, key_letter in enumerate(keyword):
-            shift.append(key_shift_determiner(key_letter, sample_freq))
+    for crypt_idx, crypt_letter in enumerate(crypt_message):
+        for shift_idx, pos in enumerate(shift):
+            if crypt_idx % len(shift) == shift_idx:
+                message += ceasar_solver(crypt_letter, pos)
 
-        for crypt_idx, crypt_letter in enumerate(crypt_message):
-            for shift_idx, pos in enumerate(shift):
-                if crypt_idx % len(shift) == shift_idx:
-                    message += ceasar_solver(crypt_letter, pos)
-
-        print (message)
-
-        msg = "Is the message cracked? (y/n) "
-        invalid_response = "Neither 'y' nor 'n' entered, exiting cracking."
-        uncracked = quit(msg, invalid_response)
+    print (message)
 
 def quit(message, invalid_response):
     invalid_response = True
