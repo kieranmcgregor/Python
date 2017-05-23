@@ -108,19 +108,19 @@ def frequencies_plotter(frequencies, sample_frequencies):
 
 def code_determiner(crypt_message, sample_freq = None):
     uncracked = True
-    cypher_length = 0
+    cipher_length = 0
 
     while uncracked:
-        cypher_length += 1
+        cipher_length += 1
         split_letters = {}
         key_letter_groups = []
         keywords = []
 
         for idx, letter in enumerate(crypt_message):
             try:
-                split_letters[idx % cypher_length] += letter
+                split_letters[idx % cipher_length] += letter
             except:
-                split_letters[idx % cypher_length] = letter
+                split_letters[idx % cipher_length] = letter
 
         for position in split_letters:
             crypt_split = split_letters[position]
@@ -132,7 +132,7 @@ def code_determiner(crypt_message, sample_freq = None):
             frequencies_plotter(frequencies, sample_freq)
             key_letter_groups.append(keyword_determiner(frequencies))
 
-        keywords = keyword_builder(key_letter_groups, cypher_length)
+        keywords = keyword_builder(key_letter_groups, cipher_length)
 
         for key in keywords:
             keyword = keywords[key]
@@ -144,7 +144,7 @@ def code_determiner(crypt_message, sample_freq = None):
         invalid_response = "Neither 'y' nor 'n' entered, exiting cracking."
         uncracked = quit(msg, invalid_response)
 
-def keyword_builder(key_letter_groups, cypher_length):
+def keyword_builder(key_letter_groups, cipher_length):
     print(key_letter_groups)
     keywords = keyword_constructor(key_letter_groups)
     return keywords
