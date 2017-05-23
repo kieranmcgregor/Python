@@ -132,21 +132,65 @@ def code_determiner(crypt_message, sample_freq = None):
             frequencies_plotter(frequencies, sample_freq)
             key_letter_groups.append(keyword_determiner(frequencies))
 
-        print(key_letter_groups)
-        # for group in key_letter_groups:
-        #     for key_letter in group:
-        #         for keyword in keywords:
+        keywords = keyword_builder(key_letter_groups, cypher_length)
 
-        # keyword_cracker(split_letters[position], key_letter, sample_freq)
+        for key in keywords:
+            keyword = keywords[key]
+            print(key, keyword)
+            keyword_cracker(crypt_message, keyword, sample_freq)
+            print('\n')
 
         msg = "Is the message cracked? (y/n) "
         invalid_response = "Neither 'y' nor 'n' entered, exiting cracking."
         uncracked = quit(msg, invalid_response)
 
+def keyword_builder(key_letter_groups, cypher_length):
+    print(key_letter_groups)
+    keywords = keyword_constructor(key_letter_groups)
+    return keywords
+
+def keyword_constructor(key_letter_groups):
+    # self expanding for-loop sequence to account for lengthening
+    # cypher_length
+    keywords = {}
+
+    if len(key_letter_groups) > 5:
+        for idx1, letter1 in enumerate(key_letter_groups[0]):
+            for idx2, letter2 in enumerate(key_letter_groups[1]):
+                for idx3, letter3 in enumerate(key_letter_groups[2]):
+                    for idx4, letter4 in enumerate(key_letter_groups[3]):
+                        for idx5, letter5 in enumerate(key_letter_groups[4]):
+                            for idx6, letter6 in enumerate(key_letter_groups[5]):
+                                keywords[(idx1, idx2, idx3, idx4, idx5, idx6)] = letter1 + letter2 + letter3 + letter4 + letter5 + letter6
+    elif len(key_letter_groups) > 4:
+        for idx1, letter1 in enumerate(key_letter_groups[0]):
+            for idx2, letter2 in enumerate(key_letter_groups[1]):
+                for idx3, letter3 in enumerate(key_letter_groups[2]):
+                    for idx4, letter4 in enumerate(key_letter_groups[3]):
+                        for idx5, letter5 in enumerate(key_letter_groups[4]):
+                            keywords[(idx1, idx2, idx3, idx4, idx5)] = letter1 + letter2 + letter3 + letter4 + letter5
+    elif len(key_letter_groups) > 3:
+        for idx1, letter1 in enumerate(key_letter_groups[0]):
+            for idx2, letter2 in enumerate(key_letter_groups[1]):
+                for idx3, letter3 in enumerate(key_letter_groups[2]):
+                    for idx4, letter4 in enumerate(key_letter_groups[3]):
+                        keywords[(idx1, idx2, idx3, idx4)] = letter1 + letter2 + letter3 + letter4
+    elif len(key_letter_groups) > 2:
+        for idx1, letter1 in enumerate(key_letter_groups[0]):
+            for idx2, letter2 in enumerate(key_letter_groups[1]):
+                for idx3, letter3 in enumerate(key_letter_groups[2]):
+                    keywords[(idx1, idx2, idx3)] = letter1 + letter2 + letter3
+    elif len(key_letter_groups) > 1:
+        for idx1, letter1 in enumerate(key_letter_groups[0]):
+            for idx2, letter2 in enumerate(key_letter_groups[1]):
+                keywords[(idx1, idx2)] = letter1 + letter2
+    else:
+        for idx, letter in enumerate(key_letter_groups):
+            keywords[(idx)] = letter
+
+    return keywords
+
 def keyword_determiner(crypt_freq):
-    # Determine shift from crypt max to sample max
-    # Needs to be expanded for multiple crypt max cases
-    # Series of numbers for shift?
     alphabet = 'abcdefghijklmnopqrstuvwxyz'
     crypt_letter_pos = 0
     keyword = ""
