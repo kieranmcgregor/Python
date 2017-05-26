@@ -9,6 +9,7 @@ def sample_loader():
         sample_text_fh = open('Sample.txt', 'r')
 
         for line in sample_text_fh:
+            line = line.strip()
             sample_message += line
 
         sample_letters = letter_counter(sample_message)
@@ -36,6 +37,7 @@ def file_loader():
             continue
 
         for line in crypt_fh:
+            line = line.strip()
             crypt_message += line
 
     return crypt_message
@@ -144,10 +146,29 @@ def code_determiner(crypt_message, sample_freq = None):
         invalid_response = "Neither 'y' nor 'n' entered, exiting cracking."
         uncracked = quit(msg, invalid_response)
 
-def keyword_builder(key_letter_groups, cipher_length):
+def keyword_builder(key_letter_groups, cipher_length = None):
     print(key_letter_groups)
     keywords = keyword_constructor(key_letter_groups)
+    keywords_recurs = keyword_recur(key_letter_groups, cipher_length)
+    print (keywords_recurs)
     return keywords
+
+def keyword_recur(key_letter_groups, cipher_length):
+    keyword = ""
+    keywords = []
+    if cipher_length == 1:
+        for letter in key_letter_groups[0]:
+            print ("cl = 1: {}".format(letter))
+            keyword = letter
+    else:
+        cipher_length -= 1
+        for letter in key_letter_groups[cipher_length]:
+            print ("cl: {}, let: {}".format(cipher_length, letter))
+            keyword = keyword_recur(key_letter_groups[:cipher_length], cipher_length) + letter
+            keywords.append(keyword)
+
+    print (keyword, keywords)
+    return keyword
 
 def keyword_constructor(key_letter_groups):
     # self expanding for-loop sequence to account for lengthening
