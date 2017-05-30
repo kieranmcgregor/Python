@@ -154,21 +154,27 @@ def keyword_builder(key_letter_groups, cipher_length = None):
     return keywords
 
 def keyword_recur(key_letter_groups, cipher_length):
-    keyword = ""
-    keywords = []
-    if cipher_length == 1:
+
+    if cipher_length <= 1:
         for letter in key_letter_groups[0]:
             print ("cl = 1: {}".format(letter))
-            keyword = letter
-    else:
-        cipher_length -= 1
-        for letter in key_letter_groups[cipher_length]:
-            print ("cl: {}, let: {}".format(cipher_length, letter))
-            keyword = keyword_recur(key_letter_groups[:cipher_length], cipher_length) + letter
-            keywords.append(keyword)
+            return [letter]
 
-    print (keyword, keywords)
-    return keyword
+    keywords = []
+    cipher_length -= 1
+    for key_letter in key_letter_groups[cipher_length]:
+        print ("cl: {}, let: {}".format(cipher_length, key_letter))
+        key_letters = keyword_recur(key_letter_groups[:cipher_length], cipher_length) + [key_letter]
+        print(key_letters)
+        keyword = ""
+        for letter in key_letters:
+            keyword += letter
+            print (keyword)
+
+        keywords.append(keyword)
+
+    print (keywords)
+    return keywords
 
 def keyword_constructor(key_letter_groups):
     # self expanding for-loop sequence to account for lengthening
