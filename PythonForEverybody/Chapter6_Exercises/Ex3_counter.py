@@ -21,12 +21,10 @@ def keep_going():
         if keep_going == 'y':
             return True
 
-        elif keep_going == 'n':
-            return False
-
-        else:
+        elif keep_going != 'n':
             print ("Neither 'y' nor 'n' entered, exiting program.")
-            return False
+
+        return False
 
 def main():
     active = True
