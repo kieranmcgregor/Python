@@ -38,7 +38,7 @@ while empty_fname:
     try:
         fhand = open(fname)
     except:
-        print("Invalid file path, using default ..\Files\\romeo.txt")
+        print("Invalid file path, using default ../Files/mbox-short.txt")
         fname = "../Files/mbox-short.txt"
         fhand = open(fname)
 
