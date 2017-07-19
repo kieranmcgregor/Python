@@ -3,19 +3,19 @@ import time
 
 PORT = 80
 HOST = input("Please enter the request URL:\n")
-REQ_FILE = input("Please enter a request file path:\n")
+PATH = input("Please enter a request file path:\n")
 
 if (len(HOST) < 1):
     print("Using default host, data.pr4e.org")
     HOST = 'data.pr4e.org'
 
-if (len(REQ_FILE) < 1):
+if (len(PATH) < 1):
     print("Using default host, data.pr4e.org")
-    REQ_FILE = '/cover.jpg'
+    PATH = '/cover.jpg'
 
 mysock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 mysock.connect((HOST, PORT))
-command = 'GET ' + REQ_FILE + ' HTTP/1.0\r\nHost: ' + HOST + '\r\n\r\n'
+command = 'GET ' + PATH + ' HTTP/1.0\r\nHost: ' + HOST + '\r\n\r\n'
 mysock.sendall(command.encode())
 
 count = 0
