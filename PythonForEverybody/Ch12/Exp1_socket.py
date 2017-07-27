@@ -10,7 +10,7 @@ if (len(HOST) < 1):
     HOST = 'data.pr4e.org'
 
 if (len(PATH) < 1):
-    print("Using default host, data.pr4e.org")
+    print("Using default file path, cover.jpg")
     PATH = '/cover.jpg'
 
 mysock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
