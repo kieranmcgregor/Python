@@ -124,7 +124,10 @@ def main():
         print('Header length', pos)
         print(doc[:pos].decode())
 
-        doc = doc[pos + len(HEADER_END):]
+        header_length = pos + len(HEADER_END)
+
+        doc = doc[header_length:]
+        count -= (header_length)
         doc_saver(doc)
 
         print(doc[:LIMIT + 1].decode() + "\n" + str(count))
