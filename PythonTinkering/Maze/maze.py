@@ -65,7 +65,7 @@ def build_path():
                 side_out = 3
 
             side_in = (side_out + 2) % 4
-            print("side out: {}, side in {}".format(side_out, side_in))
+            print("side_in {}".format(side_in))
 
         elif ((i > 0) and (i < (path_length - 1))):
             j = 0
@@ -98,7 +98,7 @@ def build_path():
                 side_out = 3
 
             side_in = (side_out + 2) % 4
-            print("side out: {}, side in {}".format(side_out, side_in))
+            print("side_in {}".format(side_in))
 
         else:
             j = 0
@@ -118,7 +118,6 @@ def build_path():
 
 def check_tiles(side, last_tile, side_in, iso = None, top = None):
     tiles = []
-    opposite_side = str((side + 2) % 4)
 
     if (str(side) not in last_tile):
         for tile in ALL_TILES:
@@ -144,7 +143,8 @@ def collision_check(path, current_pos, tile_name):
         potential_openings += TWO_SIDED[tile_name]
 
     for potential_opening in potential_openings:
-        potential_pos = ((current_pos[0] + potential_opening[0]), (current_pos[1] + potential_opening[1]))
+        potential_pos = ((current_pos[0] + potential_opening[0]),
+                            (current_pos[1] + potential_opening[1]))
         if potential_pos not in path:
             openings.append(potential_pos)
 
